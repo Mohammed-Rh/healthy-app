@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
+import 'email_verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -40,12 +41,16 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
+        String errorMessage = e.toString();
+
+        // Check if it's an email verification error
+        if (errorMessage.contains('verify your email')) {
+          _showEmailVerificationDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          );
+        }
       }
     } finally {
       if (mounted) {
@@ -54,6 +59,37 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
+  }
+
+  void _showEmailVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Email Verification Required'),
+          content: const Text(
+            'Please verify your email address before signing in. Check your inbox for a verification link.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const EmailVerificationScreen(),
+                  ),
+                );
+              },
+              child: const Text('Go to Verification'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -67,13 +103,9 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 60),
-              
+
               // App Logo/Title
-              const Icon(
-                Icons.health_and_safety,
-                size: 80,
-                color: Colors.red,
-              ),
+              const Icon(Icons.health_and_safety, size: 80, color: Colors.red),
               const SizedBox(height: 16),
               const Text(
                 'Medical Alert',
@@ -87,10 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text(
                 'Stay safe from allergens',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 60),
 
@@ -112,8 +141,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value)) {
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -168,7 +198,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text(
                                 'Sign In',
                                 style: TextStyle(fontSize: 16),

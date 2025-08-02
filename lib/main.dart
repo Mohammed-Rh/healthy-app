@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/email_verification_screen.dart';
 import 'screens/home/dashboard_screen.dart';
 
 void main() async {
@@ -41,7 +42,12 @@ class AuthWrapper extends StatelessWidget {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         if (authProvider.isAuthenticated) {
-          return const DashboardScreen();
+          // Check if email is verified
+          if (authProvider.isEmailVerified) {
+            return const DashboardScreen();
+          } else {
+            return const EmailVerificationScreen();
+          }
         } else {
           return const LoginScreen();
         }

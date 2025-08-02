@@ -5,7 +5,7 @@ import '../models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
-  
+
   User? _user;
   UserModel? _userModel;
   bool _isLoading = false;
@@ -107,6 +107,31 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     }
     _setLoading(false);
+  }
+
+  // Send email verification
+  Future<void> sendEmailVerification() async {
+    try {
+      await _authService.sendEmailVerification();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Check if email is verified
+  bool get isEmailVerified {
+    return _authService.isEmailVerified;
+  }
+
+  // Check email verification status
+  Future<void> checkEmailVerification() async {
+    try {
+      await _authService.reloadUser();
+      notifyListeners();
+    } catch (e) {
+      // Silently handle errors for periodic checks
+      debugPrint('Error checking email verification: $e');
+    }
   }
 
   // Set loading state

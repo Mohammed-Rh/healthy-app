@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import 'email_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -39,13 +40,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
+
+      // Show success message and navigate to email verification
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Account created! Please check your email for verification.',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate to email verification screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const EmailVerificationScreen(),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -73,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
-              
+
               // Title
               const Text(
                 'Create Account',
@@ -87,10 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const Text(
                 'Join us to stay safe from allergens',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 40),
 
@@ -112,8 +126,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value)) {
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -169,7 +184,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
@@ -201,7 +217,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text(
                                 'Create Account',
                                 style: TextStyle(fontSize: 16),

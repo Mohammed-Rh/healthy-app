@@ -22,6 +22,12 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      // Check if email is verified
+      if (result.user != null && !result.user!.emailVerified) {
+        throw 'Please verify your email address before signing in. Check your inbox for a verification link.';
+      }
+
       return result;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -41,8 +47,9 @@ class AuthService {
         password: password,
       );
 
-      // Create user document in Firestore
+      // Send email verification
       if (result.user != null) {
+        await result.user!.sendEmailVerification();
         await _createUserDocument(result.user!);
       }
 
@@ -74,10 +81,7 @@ class AuthService {
         updatedAt: DateTime.now(),
       );
 
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .set(userModel.toMap());
+      await _firestore.collection('users').doc(user.uid).set(userModel.toMap());
     } catch (e) {
       throw 'Error creating user profile. Please try again.';
     }
@@ -103,10 +107,7 @@ class AuthService {
   // Update user allergies
   Future<void> updateUserAllergies(String uid, List<String> allergies) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(uid)
-          .update({
+      await _firestore.collection('users').doc(uid).update({
         'allergies': allergies,
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
@@ -123,6 +124,38 @@ class AuthService {
       throw _handleAuthException(e);
     } catch (e) {
       throw 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Send email verification
+  Future<void> sendEmailVerification() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      } else if (user == null) {
+        throw 'No user is currently signed in.';
+      } else {
+        throw 'Email is already verified.';
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Check if email is verified
+  bool get isEmailVerified {
+    return _auth.currentUser?.emailVerified ?? false;
+  }
+
+  // Reload user to get updated email verification status
+  Future<void> reloadUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } catch (e) {
+      throw 'Error refreshing user data. Please try again.';
     }
   }
 
